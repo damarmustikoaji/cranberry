@@ -44,7 +44,8 @@ Kalau agent sering salah, perbaiki dulu file `.md`-nya, bukan kodenya.
 | monitor | ✅ berjalan (tanpa LLM) |
 | product-manager | ✅ berjalan |
 | system-analyst | ✅ berjalan (belum membaca kode, hanya struktur folder) |
-| developer, qa, devops | 🚧 belum aktif, issue dialihkan ke `needs-human` |
+| developer | ✅ berjalan (model gratis, maks 10 file/400 baris/3 percobaan per issue, lihat `agents/developer.md`) |
+| qa, devops | 🚧 belum aktif, issue dialihkan ke `needs-human` |
 
 ## Menjalankan secara lokal
 

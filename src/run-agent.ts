@@ -5,24 +5,26 @@ import { createGitHub } from "./tools/github.js";
 import { loadAgent } from "./prompt.js";
 import { runIssueAgent } from "./agents/issue-agent.js";
 import { runMonitor } from "./agents/monitor.js";
+import { runDeveloperAgent } from "./agents/developer.js";
 
 /**
  * Entry point: npm run agent -- --agent <name> [--issue <n>] [--since <minutes>]
  *
  * Status per agent:
- *   monitor, product-manager, system-analyst  -> berjalan
- *   developer, qa, devops                     -> belum diimplementasi (fase berikutnya)
+ *   monitor, product-manager, system-analyst, developer  -> berjalan
+ *   qa, devops                                            -> belum diimplementasi (fase berikutnya)
  */
 const { values } = parseArgs({
   options: {
     agent: { type: "string" },
     issue: { type: "string" },
     since: { type: "string", default: "30" },
+    "target-dir": { type: "string", default: "../target" },
   },
 });
 
 const ISSUE_AGENTS = new Set(["product-manager", "system-analyst"]);
-const PLANNED = new Set(["developer", "qa", "devops"]);
+const PLANNED = new Set(["qa", "devops"]);
 
 async function main() {
   const name = values.agent;
@@ -46,6 +48,18 @@ async function main() {
     await github.moveStage(issueNumber, [], ["needs-human"]);
     return;
   }
+  if (name === "developer") {
+    const agent = await loadAgent(name);
+    await runDeveloperAgent({
+      agent,
+      issueNumber,
+      github,
+      llm: providersFromConfig(cfg),
+      targetDir: values["target-dir"]!,
+    });
+    return;
+  }
+
   if (!ISSUE_AGENTS.has(name)) throw new Error(`Agent tidak dikenal: ${name}`);
 
   const agent = await loadAgent(name);

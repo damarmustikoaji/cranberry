@@ -54,6 +54,13 @@ export function createGitHub(cfg: Config) {
       return data.number;
     },
 
+    async createPullRequest(opts: { title: string; body: string; head: string; base: string }): Promise<string> {
+      log("createPullRequest", { title: opts.title, head: opts.head });
+      if (dry) return "(dry-run, no PR created)";
+      const { data } = await octokit.pulls.create({ ...base, ...opts });
+      return data.html_url;
+    },
+
     /** Find an open issue whose body contains the given marker (used for de-duplication). */
     async findOpenIssueByMarker(marker: string): Promise<number | undefined> {
       // Strip characters that could break out of the quoted phrase or act as search qualifiers.

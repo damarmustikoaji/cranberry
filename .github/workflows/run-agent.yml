@@ -68,6 +68,21 @@ jobs:
       - run: npm ci
         working-directory: cranberry
 
+      # Hanya untuk agent developer: checkout repo aplikasi supaya ada kode yang bisa diubah.
+      - name: Checkout repo target
+        if: inputs.agent == 'developer'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          token: ${{ secrets.BOT_TOKEN }}
+          path: target
+          persist-credentials: true
+
+      - name: Install deps repo target
+        if: inputs.agent == 'developer'
+        working-directory: target
+        run: npm ci
+
       - name: Jalankan agent ${{ inputs.agent }}
         working-directory: cranberry
         env:
@@ -82,7 +97,7 @@ jobs:
           SINCE: ${{ inputs.since }}
         run: |
           if [ -n "$ISSUE" ]; then
-            npm run agent -- --agent "$AGENT" --issue "$ISSUE"
+            npm run agent -- --agent "$AGENT" --issue "$ISSUE" --target-dir "$GITHUB_WORKSPACE/target"
           else
             npm run agent -- --agent "$AGENT" --since "$SINCE"
           fi
