@@ -21,5 +21,12 @@ export async function postJson(url: string, body: unknown, headers: Record<strin
     if (res.status === 429 || res.status === 404 || res.status >= 500) throw new RetryableLlmError(msg);
     throw new Error(msg);
   }
-  return res.json();
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    // A 200 with a non-JSON body (proxy/edge quirk, wrong endpoint, etc.) is still
+    // this provider's problem, not reason to give up on the others.
+    throw new RetryableLlmError(`${url} -> HTTP 200 with non-JSON body: ${text.slice(0, 200)}`);
+  }
 }
