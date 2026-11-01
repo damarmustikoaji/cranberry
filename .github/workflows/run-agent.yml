@@ -1,0 +1,88 @@
+# Reusable workflow: dipanggil dari repo aplikasi (mustard-apple), contoh:
+#
+#   jobs:
+#     pm:
+#       uses: damarmustikoaji/cranberry/.github/workflows/run-agent.yml@master
+#       with: { agent: product-manager, issue: "${{ github.event.issue.number }}" }
+#       secrets: inherit
+name: run-agent
+
+on:
+  workflow_call:
+    inputs:
+      agent:
+        description: "monitor | product-manager | system-analyst | developer | qa | devops"
+        required: true
+        type: string
+      issue:
+        description: "Nomor issue (kosongkan untuk monitor)"
+        required: false
+        type: string
+        default: ""
+      since:
+        description: "Monitor: rentang menit error yang dibaca"
+        required: false
+        type: string
+        default: "30"
+      cranberry-ref:
+        description: "Versi cranberry yang dipakai"
+        required: false
+        type: string
+        default: master
+    secrets:
+      BOT_TOKEN:
+        description: "GitHub App token / fine-grained PAT untuk repo aplikasi"
+        required: true
+      GEMINI_API_KEY:
+        required: false
+      GROQ_API_KEY:
+        required: false
+      DATABASE_URL:
+        required: false
+
+permissions:
+  contents: read
+  models: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Satu issue hanya boleh dikerjakan satu agent pada satu waktu.
+    concurrency:
+      group: cranberry-${{ github.repository }}-${{ inputs.issue || inputs.agent }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: damarmustikoaji/cranberry
+          ref: ${{ inputs.cranberry-ref }}
+          path: cranberry
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cranberry/package-lock.json
+
+      - run: npm ci
+        working-directory: cranberry
+
+      - name: Jalankan agent ${{ inputs.agent }}
+        working-directory: cranberry
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TARGET_REPO: ${{ github.repository }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_MODELS_TOKEN: ${{ github.token }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AGENT: ${{ inputs.agent }}
+          ISSUE: ${{ inputs.issue }}
+          SINCE: ${{ inputs.since }}
+        run: |
+          if [ -n "$ISSUE" ]; then
+            npm run agent -- --agent "$AGENT" --issue "$ISSUE"
+          else
+            npm run agent -- --agent "$AGENT" --since "$SINCE"
+          fi
