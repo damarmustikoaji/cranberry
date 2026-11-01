@@ -16,8 +16,9 @@ export async function postJson(url: string, body: unknown, headers: Record<strin
   if (!res.ok) {
     const text = await res.text();
     const msg = `${url} -> HTTP ${res.status}: ${text.slice(0, 500)}`;
-    // 429 = quota/rate limit, 5xx = provider outage: let the next provider try.
-    if (res.status === 429 || res.status >= 500) throw new RetryableLlmError(msg);
+    // 429 = quota/rate limit, 5xx = provider outage, 404 = bad/deprecated model name:
+    // none of these say the other providers are broken too, so let the next one try.
+    if (res.status === 429 || res.status === 404 || res.status >= 500) throw new RetryableLlmError(msg);
     throw new Error(msg);
   }
   return res.json();

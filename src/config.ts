@@ -5,7 +5,7 @@ const Env = z.object({
   TARGET_REPO: z.string().regex(/^[\w.-]+\/[\w.-]+$/, "TARGET_REPO harus berformat owner/name"),
   LLM_PROVIDERS: z.string().default("gemini,github,groq"),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+  GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
   GITHUB_MODELS_TOKEN: z.string().optional(),
   GITHUB_MODELS_MODEL: z.string().default("openai/gpt-4.1-mini"),
   GROQ_API_KEY: z.string().optional(),
